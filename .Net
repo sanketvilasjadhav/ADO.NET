@@ -1,0 +1,298 @@
+
+---------------------------Web.config--------------------------------------------------------------------
+<configuration>
+
+	<connectionStrings>
+
+		<add name ="constr" connectionString="Data Source=DESKTOP-Q75H7OK\MSSQLSERVER01;Initial Catalog=collegedb;Integrated Security=True"/>
+	</connectionStrings>
+
+</configuration>
+--------------------------------------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data;
+using System.Data.SqlClient;
+using System.Configuration;
+
+namespace WebApplication26
+{
+    public partial class Emp : System.Web.UI.Page
+    {
+
+        SqlConnection con = null;
+        SqlCommand cmd = null;
+        SqlDataReader dr = null;
+
+        string con_str = ConfigurationManager.ConnectionStrings["constr"].ConnectionString;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+
+            if(!IsPostBack)
+            {
+                try
+                {
+                    con = new SqlConnection(con_str);
+                    con.Open();
+
+                    
+
+                    string qur = "SELECT state_id,state FROM State_Master";
+                    cmd = new SqlCommand(qur, con);
+                    dr = cmd.ExecuteReader();
+
+                    if(dr.HasRows)
+                    {
+                        DataTable dt = new DataTable();
+                        dt.Load(dr);
+                        DDL_State.DataValueField = "state_id";
+                        DDL_State.DataTextField = "state";
+                        DDL_State.DataSource = dt;
+                        DDL_State.DataBind();
+                        DDL_State.Items.Insert(0, "---Select----");
+                    }
+
+                }
+                catch(Exception ex)
+                {
+                    Lbl_Res.Text = ex.Message;
+                }
+                finally
+                {
+                    dr.Close();
+                    con.Close();
+                }
+            }
+
+        }
+
+        protected void Btn_Save_Click(object sender, EventArgs e)
+        {
+
+            try
+            {
+                con = new SqlConnection(con_str);
+                con.Open();
+
+                string qur = "INSERT INTO empinfo(eid,firstname,lastname,age,city,state,country) VALUES(@id,@fn,@ln,@ag,@ct,@st,@cnt)";
+                cmd = new SqlCommand(qur,con);
+
+                cmd.Parameters.AddWithValue("@id", Txt_ID.Text);
+                cmd.Parameters.AddWithValue("@fn", Txt_FirstName.Text);
+                cmd.Parameters.AddWithValue("@ln", Txt_LastName.Text);
+                cmd.Parameters.AddWithValue("@ag", Txt_Age.Text);
+                cmd.Parameters.AddWithValue("@ct", DDL_City.SelectedItem.ToString());
+                cmd.Parameters.AddWithValue("@st", DDL_State.SelectedItem.ToString());
+                //  cmd.Parameters.AddWithValue("@ct", Txt_City.Text);
+                //cmd.Parameters.AddWithValue("@st", Txt_State.Text);
+                cmd.Parameters.AddWithValue("@cnt", Txt_Country.Text);
+                int i = cmd.ExecuteNonQuery();
+
+                if (i > 0)
+                    Lbl_Res.Text = "Data Saved Successfully";
+            }
+            catch(Exception ex)
+            {
+                Lbl_Res.Text = ex.Message;
+            }
+            finally
+            {
+                con.Close();
+            }
+
+
+        }
+
+        protected void Btn_Update_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                con = new SqlConnection(con_str);
+                con.Open();
+
+                string qur = "UPDATE empinfo SET firstname=@fn,lastname=@ln,age=@ag,city=@ct,state=@st,country=@cnt WHERE eid=@id";
+                cmd = new SqlCommand(qur, con);
+
+                cmd.Parameters.AddWithValue("@id", Txt_ID.Text);
+                cmd.Parameters.AddWithValue("@fn", Txt_FirstName.Text);
+                cmd.Parameters.AddWithValue("@ln", Txt_LastName.Text);
+                cmd.Parameters.AddWithValue("@ag", Txt_Age.Text);
+                cmd.Parameters.AddWithValue("@ct", DDL_City.SelectedItem.ToString());
+                 cmd.Parameters.AddWithValue("@st", DDL_State.SelectedItem.ToString());
+
+                //cmd.Parameters.AddWithValue("@ct", Txt_City.Text);
+                // cmd.Parameters.AddWithValue("@st", Txt_State.Text);
+                cmd.Parameters.AddWithValue("@cnt", Txt_Country.Text);
+                int i = cmd.ExecuteNonQuery();
+
+                if (i > 0)
+                    Lbl_Res.Text = "Data Updated Successfully";
+                else
+                    Lbl_Res.Text = "Data Not Updated.....";
+
+            }
+            catch (Exception ex)
+            {
+                Lbl_Res.Text = ex.Message;
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        protected void Btn_Del_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                con = new SqlConnection(con_str);
+                con.Open();
+
+                string qur = "DELETE FROM empinfo WHERE eid=@id";
+                cmd = new SqlCommand(qur, con);
+
+                cmd.Parameters.AddWithValue("@id", Txt_ID.Text);
+              
+                int i = cmd.ExecuteNonQuery();
+
+                if (i > 0)
+                    Lbl_Res.Text = "Data Deleted Successfully";
+                else
+                    Lbl_Res.Text = "Data Not Deleted.....";
+
+            }
+            catch (Exception ex)
+            {
+                Lbl_Res.Text = ex.Message;
+            }
+            finally
+            {
+                con.Close();
+            }
+        }
+
+        protected void Btn_Show_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                con = new SqlConnection(con_str);
+                con.Open();
+
+                string qur = "SELECT * FROM empinfo";
+                cmd = new SqlCommand(qur, con);
+                dr = cmd.ExecuteReader();
+                
+                if(dr.HasRows)
+                {
+                    GridView1.DataSource = dr;
+                    GridView1.DataBind();
+                }
+
+             
+
+            }
+            catch (Exception ex)
+            {
+                Lbl_Res.Text = ex.Message;
+            }
+            finally
+            {
+                dr.Close();
+                con.Close();
+            }
+        }
+
+        protected void Btn_Search_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                con = new SqlConnection(con_str);
+                con.Open();
+
+                string qur = "SELECT * FROM empinfo WHERE eid=@id";
+                cmd = new SqlCommand(qur, con);
+                cmd.Parameters.AddWithValue("@id", Txt_ID.Text);
+                dr = cmd.ExecuteReader();
+
+                if (dr.HasRows)
+                {
+                    dr.Read();
+
+                    Txt_FirstName.Text = dr["firstname"].ToString();
+                    //Txt_FirstName.Text = dr[1].ToString();
+                    Txt_LastName.Text = dr["lastname"].ToString();
+                    Txt_Age.Text = dr["age"].ToString();
+                   // Txt_City.Text = dr["city"].ToString();
+                    //Txt_State.Text = dr["state"].ToString();
+                    Txt_Country.Text = dr["country"].ToString();
+                }
+                else
+                {
+                    Lbl_Res.Text = "User Not Found";
+                    Txt_FirstName.Text = "";
+                    Txt_LastName.Text = "";
+                    Txt_Age.Text = "";
+                    Txt_Country.Text = "";
+                    //Txt_State.Text = "";
+                    //Txt_City.Text = "";
+                }
+
+
+
+            }
+            catch (Exception ex)
+            {
+                Lbl_Res.Text = ex.Message;
+            }
+            finally
+            {
+                dr.Close();
+                con.Close();
+            }
+        }
+
+        protected void DDL_State_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                con = new SqlConnection(con_str);
+                con.Open();
+
+                int sid = int.Parse(DDL_State.SelectedValue.ToString());
+
+                string qur = "SELECT cid ,city FROM City_Master WHERE state_id=@id";
+                cmd = new SqlCommand(qur, con);
+                cmd.Parameters.AddWithValue("@id", sid);
+                dr = cmd.ExecuteReader();
+
+                if (dr.HasRows)
+                {
+                    DataTable dt = new DataTable();
+                    dt.Load(dr);
+                    DDL_City.DataValueField = "cid";
+                    DDL_City.DataTextField = "city";
+                    DDL_City.DataSource = dt;
+                    DDL_City.DataBind();
+                    //DDL_City.Items.Insert(0, "---Select----");
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Lbl_Res.Text = ex.Message;
+            }
+            finally
+            {
+                dr.Close();
+                con.Close();
+            }
+        }
+    }
+}
+ASP_ADO.NET_CRUD_23Sept.txt
+Displaying ASP_ADO.NET_CRUD_23Sept.txt.
